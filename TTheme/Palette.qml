@@ -72,11 +72,11 @@ QtObject {
         }
     }
 
-    property Timer paletteTimer: Timer {
-        interval: 1500
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.loadPalette()
+    Component.onCompleted: {
+        root.loadPalette();
+        setInterval(function() {
+            root.loadPalette();
+        }, 1500);
     }
 
     function color(role) {
