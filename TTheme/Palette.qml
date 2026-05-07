@@ -24,8 +24,6 @@ QtObject {
 
     signal loaded
 
-    property bool _loading: false
-
     readonly property var _defaultDark: ({
         primary: "#D0BCFF",
         on_primary: "#381E72",
@@ -91,44 +89,23 @@ QtObject {
     }
 
     function loadPalette() {
-        if (root._loading) return;
-        root._loading = true;
-
         const url = root._urlForPath(root.palettePath);
         console.warn("TTheme: loading palette from", url);
         const xhr = new XMLHttpRequest();
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return;
-            root._loading = false;
-
+        try {
+            xhr.open("GET", url, false);
+            xhr.send();
             if (xhr.status === 0 || xhr.status === 200) {
-                try {
-                    const parsed = JSON.parse(xhr.responseText);
-                    root.applyPaletteData(parsed);
-                    console.warn("TTheme: palette loaded successfully");
-                    return;
-                } catch (e) {
-                    console.warn("TTheme: JSON parse error:", e);
-                }
+                const parsed = JSON.parse(xhr.responseText);
+                root.applyPaletteData(parsed);
+                console.warn("TTheme: palette loaded successfully");
             } else {
                 console.warn("TTheme: XHR failed with status", xhr.status);
+                if (!root.ready) root.markReadyWithDefaults();
             }
-
-            if (!root.ready) {
-                root.markReadyWithDefaults();
-            }
-        };
-
-        try {
-            xhr.open("GET", url, true);
-            xhr.send();
         } catch (error) {
             console.warn("TTheme: XHR error:", error);
-            root._loading = false;
-            if (!root.ready) {
-                root.markReadyWithDefaults();
-            }
+            if (!root.ready) root.markReadyWithDefaults();
         }
     }
 
