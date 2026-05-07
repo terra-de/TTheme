@@ -5,7 +5,7 @@ import Qt.labs.platform as Platform
 
 import "PaletteUtils.js" as PaletteUtils
 
-QtObject {
+Item {
     id: root
 
     readonly property string defaultPalettePath:
