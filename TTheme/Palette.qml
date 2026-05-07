@@ -24,6 +24,47 @@ QtObject {
 
     signal loaded
 
+    property bool _loading: false
+
+    readonly property var _defaultDark: ({
+        primary: "#D0BCFF",
+        on_primary: "#381E72",
+        primary_container: "#4F378B",
+        on_primary_container: "#EADDFF",
+        secondary: "#CCC2DC",
+        on_secondary: "#332D41",
+        secondary_container: "#4A4458",
+        on_secondary_container: "#E8DEF8",
+        tertiary: "#EFB8C8",
+        on_tertiary: "#492532",
+        tertiary_container: "#633B48",
+        on_tertiary_container: "#FFD8E4",
+        surface: "#141218",
+        on_surface: "#E6E0E9",
+        surface_variant: "#49454F",
+        on_surface_variant: "#CAC4D0",
+        background: "#141218",
+        on_background: "#E6E0E9",
+        outline: "#938F99",
+        outline_variant: "#49454F",
+        surface_container: "#211F26",
+        surface_container_low: "#1D1B20",
+        surface_container_high: "#2B2930",
+        surface_container_highest: "#36343B",
+        surface_container_lowest: "#0F0D13",
+        surface_dim: "#141218",
+        surface_bright: "#3B383E",
+        inverse_surface: "#E6E0E9",
+        inverse_on_surface: "#322F35",
+        inverse_primary: "#6750A4",
+        error: "#F2B8B5",
+        on_error: "#601410",
+        error_container: "#8C1D18",
+        on_error_container: "#F9DEDC",
+        scrim: "#000000",
+        shadow: "#000000"
+    })
+
     function _urlForPath(path) {
         if (path.startsWith("file://") || path.startsWith("qrc://")) {
             return path;
@@ -32,10 +73,10 @@ QtObject {
     }
 
     function markReadyWithDefaults() {
-        const sanitized = PaletteUtils.sanitizePaletteData(({}), root.mode, root.light, root.dark);
-        root.mode = sanitized.mode;
-        root.light = sanitized.light;
-        root.dark = sanitized.dark;
+        console.warn("TTheme: using fallback default palette (file not loaded)");
+        root.mode = "dark";
+        root.light = ({});
+        root.dark = root._defaultDark;
         root.ready = true;
         root.loaded();
     }
@@ -50,22 +91,41 @@ QtObject {
     }
 
     function loadPalette() {
+        if (root._loading) return;
+        root._loading = true;
+
         const url = root._urlForPath(root.palettePath);
         console.warn("TTheme: loading palette from", url);
         const xhr = new XMLHttpRequest();
-        try {
-            xhr.open("GET", url, false);
-            xhr.send();
-            console.warn("TTheme: XHR status", xhr.status, "readyState", xhr.readyState, "responseLength", xhr.responseText?.length);
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            root._loading = false;
+
             if (xhr.status === 0 || xhr.status === 200) {
-                const parsed = JSON.parse(xhr.responseText);
-                root.applyPaletteData(parsed);
-            } else if (!root.ready) {
-                console.warn("TTheme: XHR failed with status", xhr.status, ", using defaults");
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    root.applyPaletteData(parsed);
+                    console.warn("TTheme: palette loaded successfully");
+                    return;
+                } catch (e) {
+                    console.warn("TTheme: JSON parse error:", e);
+                }
+            } else {
+                console.warn("TTheme: XHR failed with status", xhr.status);
+            }
+
+            if (!root.ready) {
                 root.markReadyWithDefaults();
             }
+        };
+
+        try {
+            xhr.open("GET", url, true);
+            xhr.send();
         } catch (error) {
             console.warn("TTheme: XHR error:", error);
+            root._loading = false;
             if (!root.ready) {
                 root.markReadyWithDefaults();
             }
@@ -82,6 +142,7 @@ QtObject {
     function color(role) {
         const value = current?.[role];
         if (value === undefined || value === null) {
+            console.warn("TTheme: missing color role '" + role + "' in mode '" + root.mode + "', returning transparent");
             return "transparent";
         }
         return value;
