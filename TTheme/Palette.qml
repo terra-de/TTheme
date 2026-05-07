@@ -2,12 +2,82 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Qt.labs.platform as Platform
+
+import "PaletteUtils.js" as PaletteUtils
 
 QtObject {
     id: root
 
-    readonly property bool ready: PaletteStore.ready
-    readonly property var current: PaletteStore.current
+    readonly property string defaultPalettePath:
+        Platform.StandardPaths.writableLocation(Platform.StandardPaths.HomeLocation)
+        + "/.config/terra/palette.json"
+
+    property string palettePath: root.defaultPalettePath
+
+    property bool ready: false
+
+    property string mode: "dark"
+    property var light: ({})
+    property var dark: ({})
+    readonly property var current: mode === "light" ? light : dark
+
+    signal loaded
+
+    function _urlForPath(path) {
+        if (path.startsWith("file://") || path.startsWith("qrc://")) {
+            return path;
+        }
+        return "file://" + path;
+    }
+
+    function markReadyWithDefaults() {
+        const sanitized = PaletteUtils.sanitizePaletteData(({}), root.mode, root.light, root.dark);
+        root.mode = sanitized.mode;
+        root.light = sanitized.light;
+        root.dark = sanitized.dark;
+        root.ready = true;
+        root.loaded();
+    }
+
+    function applyPaletteData(parsed) {
+        const sanitized = PaletteUtils.sanitizePaletteData(parsed, root.mode, root.light, root.dark);
+        root.mode = sanitized.mode;
+        root.light = sanitized.light;
+        root.dark = sanitized.dark;
+        root.ready = true;
+        root.loaded();
+    }
+
+    function loadPalette() {
+        const url = root._urlForPath(root.palettePath);
+        console.warn("TTheme: loading palette from", url);
+        const xhr = new XMLHttpRequest();
+        try {
+            xhr.open("GET", url, false);
+            xhr.send();
+            console.warn("TTheme: XHR status", xhr.status, "readyState", xhr.readyState, "responseLength", xhr.responseText?.length);
+            if (xhr.status === 0 || xhr.status === 200) {
+                const parsed = JSON.parse(xhr.responseText);
+                root.applyPaletteData(parsed);
+            } else if (!root.ready) {
+                console.warn("TTheme: XHR failed with status", xhr.status, ", using defaults");
+                root.markReadyWithDefaults();
+            }
+        } catch (error) {
+            console.warn("TTheme: XHR error:", error);
+            if (!root.ready) {
+                root.markReadyWithDefaults();
+            }
+        }
+    }
+
+    property Timer paletteTimer: Timer {
+        interval: 1500
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.loadPalette()
+    }
 
     function color(role) {
         const value = current?.[role];
