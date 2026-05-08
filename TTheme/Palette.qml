@@ -9,6 +9,8 @@ import "PaletteUtils.js" as PaletteUtils
 QtObject {
     id: root
 
+    // --- Path & State ---
+
     readonly property string defaultPalettePath:
         Platform.StandardPaths.writableLocation(Platform.StandardPaths.HomeLocation)
         + "/.config/terra/palette.json"
@@ -24,44 +26,31 @@ QtObject {
 
     signal loaded
 
+    // --- V2 Default Fallback (dark) ---
+
     readonly property var _defaultDark: ({
-        primary: "#D0BCFF",
-        on_primary: "#381E72",
-        primary_container: "#4F378B",
-        on_primary_container: "#EADDFF",
-        secondary: "#CCC2DC",
-        on_secondary: "#332D41",
-        secondary_container: "#4A4458",
-        on_secondary_container: "#E8DEF8",
-        tertiary: "#EFB8C8",
-        on_tertiary: "#492532",
-        tertiary_container: "#633B48",
-        on_tertiary_container: "#FFD8E4",
-        surface: "#141218",
-        on_surface: "#E6E0E9",
-        surface_variant: "#49454F",
-        on_surface_variant: "#CAC4D0",
-        background: "#141218",
-        on_background: "#E6E0E9",
-        outline: "#938F99",
-        outline_variant: "#49454F",
-        surface_container: "#211F26",
-        surface_container_low: "#1D1B20",
-        surface_container_high: "#2B2930",
-        surface_container_highest: "#36343B",
-        surface_container_lowest: "#0F0D13",
-        surface_dim: "#141218",
-        surface_bright: "#3B383E",
-        inverse_surface: "#E6E0E9",
-        inverse_on_surface: "#322F35",
-        inverse_primary: "#6750A4",
-        error: "#F2B8B5",
-        on_error: "#601410",
-        error_container: "#8C1D18",
-        on_error_container: "#F9DEDC",
-        scrim: "#000000",
-        shadow: "#000000"
+        back:    "#0e0b0e",
+        base:    "#181114",
+        front:   "#21171f",
+        top:     "#29222a",
+        standard:"#e7e9ea",
+        muted:   "#929799",
+        c0:      "#69374f",
+        on_c0:   "#dfb9d6",
+        c1:      "#874878",
+        on_c1:   "#d5c1d7",
+        c2:      "#906694",
+        on_c2:   "#dbbdd8",
+        c3:      "#ae7ba9",
+        on_c3:   "#3e2541",
+        c4:      "#c1a1c5",
+        on_c4:   "#462032",
+        error:   "#e10b10",
+        on_error:"#d7ced5",
+        outline: "#735965"
     })
+
+    // --- Internal ---
 
     function _urlForPath(path) {
         if (path.startsWith("file://") || path.startsWith("qrc://")) {
@@ -116,6 +105,8 @@ QtObject {
         }, 1500);
     }
 
+    // --- Dynamic role lookup (pure, no aliases) ---
+
     function color(role) {
         const value = current?.[role];
         if (value === undefined || value === null) {
@@ -125,50 +116,34 @@ QtObject {
         return value;
     }
 
-    readonly property color primary: current.primary || "#000000"
-    readonly property color onPrimary: current.on_primary || "#ffffff"
-    readonly property color primaryContainer: current.primary_container || "#000000"
-    readonly property color onPrimaryContainer: current.on_primary_container || "#ffffff"
+    // --- V2 Properties (17 total, no legacy names) ---
 
-    readonly property color secondary: current.secondary || "#000000"
-    readonly property color onSecondary: current.on_secondary || "#ffffff"
-    readonly property color secondaryContainer: current.secondary_container || "#000000"
-    readonly property color onSecondaryContainer: current.on_secondary_container || "#ffffff"
+    // Background layers
+    readonly property color back:   current.back    || _defaultDark.back
+    readonly property color base:   current.base    || _defaultDark.base
+    readonly property color front:  current.front   || _defaultDark.front
+    readonly property color top:    current.top     || _defaultDark.top
 
-    readonly property color tertiary: current.tertiary || "#000000"
-    readonly property color onTertiary: current.on_tertiary || "#ffffff"
-    readonly property color tertiaryContainer: current.tertiary_container || "#000000"
-    readonly property color onTertiaryContainer: current.on_tertiary_container || "#ffffff"
+    // Text tokens
+    readonly property color standard: current.standard || _defaultDark.standard
+    readonly property color muted:    current.muted    || _defaultDark.muted
 
-    readonly property color surface: current.surface || "#000000"
-    readonly property color onSurface: current.on_surface || "#ffffff"
-    readonly property color surfaceVariant: current.surface_variant || "#000000"
-    readonly property color onSurfaceVariant: current.on_surface_variant || "#ffffff"
+    // Semantic colors
+    readonly property color c0:   current.c0   || _defaultDark.c0
+    readonly property color onC0: current.on_c0 || _defaultDark.on_c0
+    readonly property color c1:   current.c1   || _defaultDark.c1
+    readonly property color onC1: current.on_c1 || _defaultDark.on_c1
+    readonly property color c2:   current.c2   || _defaultDark.c2
+    readonly property color onC2: current.on_c2 || _defaultDark.on_c2
+    readonly property color c3:   current.c3   || _defaultDark.c3
+    readonly property color onC3: current.on_c3 || _defaultDark.on_c3
+    readonly property color c4:   current.c4   || _defaultDark.c4
+    readonly property color onC4: current.on_c4 || _defaultDark.on_c4
 
-    readonly property color background: current.background || "#000000"
-    readonly property color onBackground: current.on_background || "#ffffff"
+    // Error
+    readonly property color error:   current.error    || _defaultDark.error
+    readonly property color onError: current.on_error || _defaultDark.on_error
 
-    readonly property color outline: current.outline || "#ffffff"
-    readonly property color outlineVariant: current.outline_variant || "#ffffff"
-
-    readonly property color surfaceTint: current.surface_tint || primary
-    readonly property color surfaceContainer: current.surface_container || surface
-    readonly property color surfaceContainerLow: current.surface_container_low || surface
-    readonly property color surfaceContainerHigh: current.surface_container_high || surface
-    readonly property color surfaceContainerHighest: current.surface_container_highest || surface
-    readonly property color surfaceContainerLowest: current.surface_container_lowest || surface
-    readonly property color surfaceDim: current.surface_dim || surface
-    readonly property color surfaceBright: current.surface_bright || surface
-
-    readonly property color inverseSurface: current.inverse_surface || surface
-    readonly property color inverseOnSurface: current.inverse_on_surface || onSurface
-    readonly property color inversePrimary: current.inverse_primary || primary
-
-    readonly property color error: current.error || "#b00020"
-    readonly property color onError: current.on_error || "#ffffff"
-    readonly property color errorContainer: current.error_container || error
-    readonly property color onErrorContainer: current.on_error_container || onError
-
-    readonly property color scrim: current.scrim || "#000000"
-    readonly property color shadow: current.shadow || "#000000"
+    // Outline
+    readonly property color outline: current.outline || _defaultDark.outline
 }
