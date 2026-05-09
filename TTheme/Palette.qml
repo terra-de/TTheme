@@ -27,11 +27,15 @@ QtObject {
     signal loaded
 
     // --- V2 Default Fallback (dark) ---
+    // c0 = background source (darkest), c4 = loudest accent (lightest).
+    // All backgrounds are in c0's hue family (cohesive single-source).
+    // on-colors hand-crafted for readability.
 
     readonly property var _defaultDark: ({
-        back:    "#0e0b0e",
+        bottom:  "#0e0b0e",
+        low:     "#140f15",
         base:    "#181114",
-        front:   "#21171f",
+        high:    "#21171f",
         top:     "#29222a",
         standard:"#e7e9ea",
         muted:   "#929799",
