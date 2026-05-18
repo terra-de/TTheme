@@ -102,16 +102,13 @@ QtObject {
         }
     }
 
-    Timer {
-        id: pollTimer
-        interval: 1500
-        running: true
-        repeat: true
-        onTriggered: root.loadPalette()
-    }
-
     Component.onCompleted: {
         root.loadPalette();
+        Qt.createQmlObject(
+            "import QtQuick; Timer { interval: 1500; running: true; repeat: true; onTriggered: root.loadPalette() }",
+            root,
+            "palettePollTimer"
+        );
     }
 
     // --- Dynamic role lookup (pure, no aliases) ---
