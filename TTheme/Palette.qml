@@ -102,11 +102,16 @@ QtObject {
         }
     }
 
+    Timer {
+        id: pollTimer
+        interval: 1500
+        running: true
+        repeat: true
+        onTriggered: root.loadPalette()
+    }
+
     Component.onCompleted: {
         root.loadPalette();
-        setInterval(function() {
-            root.loadPalette();
-        }, 1500);
     }
 
     // --- Dynamic role lookup (pure, no aliases) ---
@@ -122,10 +127,11 @@ QtObject {
 
     // --- V2 Properties (17 total, no legacy names) ---
 
-    // Background layers
-    readonly property color back:   current.back    || _defaultDark.back
+    // Background layers (bottom → low → base → high → top, deepest to foremost)
+    readonly property color bottom: current.bottom  || _defaultDark.bottom
+    readonly property color low:    current.low     || _defaultDark.low
     readonly property color base:   current.base    || _defaultDark.base
-    readonly property color front:  current.front   || _defaultDark.front
+    readonly property color high:   current.high    || _defaultDark.high
     readonly property color top:    current.top     || _defaultDark.top
 
     // Text tokens
